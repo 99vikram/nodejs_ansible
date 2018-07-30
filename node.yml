@@ -1,0 +1,53 @@
+---
+- hosts: node-cron
+  vars:
+    NODEJS_VERSION: "8"
+  tasks:
+    - name: Install the gpg key for nodejs LTS
+      become: yes
+      apt_key:
+        url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+        state: present
+
+    - name: Install the nodejs LTS repos
+      apt_repository:
+        repo: "deb https://deb.nodesource.com/node_{{ NODEJS_VERSION }}.x {{ ansible_distribution_release }} main"
+        state: present
+        update_cache: yes
+
+    - name: Installing  nodejs package
+      become: yes
+      become_method: sudo
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Installing GIT package
+      become: yes
+      become_method: sudo
+      apt:
+        name: git
+        state: present
+    
+
+    - name: Cloning Git Repository
+      become: yes
+      git: 
+       repo: git://github.com/99vikram/nodejs_ansible.git  
+       dest: /srv/devops 
+       clone: yes
+       force: yes 
+       update: yes
+ 
+    - name: Install npm node cron
+      become: yes
+      npm:
+       name: node-cron
+       global: yes
+       state: present
+
+
+    - cron: 
+       name: "Run in every 1 minutes"
+       job: "/usr/bin/node /srv/devops/find.js "
+
